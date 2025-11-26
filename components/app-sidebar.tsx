@@ -5,7 +5,7 @@ import {
   IconDatabase,
   IconFolder,
   IconListDetails,
-  IconImage,
+  IconPicture,
 } from "@tabler/icons-react"
 import {
   Sidebar,
@@ -40,7 +40,7 @@ const data = {
     {
       name: "Banners",
       link: "/painel/banners" as const,
-      icon: IconImage,
+      icon: IconPicture,
     },
   ],
 }
