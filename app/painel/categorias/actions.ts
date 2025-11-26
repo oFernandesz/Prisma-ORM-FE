@@ -1,20 +1,23 @@
 'use server'
 
 import prisma from '@/lib/prisma-client'
-
 import { revalidatePath } from 'next/cache'
+import { categoriaSchema } from './schemas'
 
 export async function criarCategoria(formData: FormData) {
   const nome = formData.get('nome') as string
 
-  if (!nome || nome.trim() === '') {
-    return { error: 'Nome da categoria é obrigatório' }
+  // Validar com Zod
+  const validacao = categoriaSchema.safeParse({ nome })
+
+  if (!validacao.success) {
+    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
   }
 
   try {
     await prisma.categorias.create({
       data: {
-        nome: nome.trim(),
+        nome: validacao.data.nome.trim(),
       },
     })
 
@@ -22,6 +25,9 @@ export async function criarCategoria(formData: FormData) {
     return { success: true }
   } catch (error) {
     console.error('Erro ao criar categoria:', error)
+    if (error instanceof Error && error.message.includes('Unique constraint failed')) {
+      return { error: 'Categoria com este nome já existe' }
+    }
     return { error: 'Erro ao criar categoria' }
   }
 }
@@ -29,15 +35,18 @@ export async function criarCategoria(formData: FormData) {
 export async function editarCategoria(id: string, formData: FormData) {
   const nome = formData.get('nome') as string
 
-  if (!nome || nome.trim() === '') {
-    return { error: 'Nome da categoria é obrigatório' }
+  // Validar com Zod
+  const validacao = categoriaSchema.safeParse({ nome })
+
+  if (!validacao.success) {
+    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
   }
 
   try {
     await prisma.categorias.update({
       where: { id },
       data: {
-        nome: nome.trim(),
+        nome: validacao.data.nome.trim(),
       },
     })
 
@@ -45,6 +54,9 @@ export async function editarCategoria(id: string, formData: FormData) {
     return { success: true }
   } catch (error) {
     console.error('Erro ao editar categoria:', error)
+    if (error instanceof Error && error.message.includes('Unique constraint failed')) {
+      return { error: 'Categoria com este nome já existe' }
+    }
     return { error: 'Erro ao editar categoria' }
   }
 }
