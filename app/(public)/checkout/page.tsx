@@ -56,9 +56,9 @@ export default function CheckoutPage() {
     const result = checkoutSchema.safeParse(formData)
     if (!result.success) {
       const newErrors: FormErrors = {}
-      result.error.errors.forEach((error) => {
-        if (error.path[0]) {
-          newErrors[error.path[0] as string] = error.message
+      result.error.issues.forEach((issue: any) => {
+        if (issue.path[0]) {
+          newErrors[issue.path[0] as string] = issue.message
         }
       })
       setErrors(newErrors)

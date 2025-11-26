@@ -37,11 +37,6 @@ const data = {
       link: "/painel/pedidos" as const,
       icon: IconListDetails,
     },
-    {
-      name: "Banners",
-      link: "/painel/banners" as const,
-      icon: IconPhoto,
-    },
   ],
 }
 

@@ -33,6 +33,12 @@ export function SiteHeader() {
 
           {/* Cart Button */}
           <div className="flex items-center gap-4">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Admin
+            </Link>
             <button
               onClick={() => router.push('/carrinho')}
               className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -72,6 +78,13 @@ export function SiteHeader() {
             >
               Categorias
             </a>
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="block text-foreground hover:text-primary transition-colors py-2"
+            >
+              Admin
+            </Link>
           </nav>
         )}
       </div>

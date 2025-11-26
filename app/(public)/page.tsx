@@ -77,69 +77,70 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4">
       <div className="space-y-8">
-      {/* Banner */}
-      {banners.length > 0 && (
-        <div className="relative h-64 w-full rounded-lg overflow-hidden shadow-lg">
-          {banners[0].link ? (
-            <Link href={banners[0].link}>
+        {/* Banner */}
+        {banners.length > 0 && (
+          <div className="relative h-64 w-full rounded-lg overflow-hidden shadow-lg">
+            {banners[0].link ? (
+              <Link href={banners[0].link}>
+                <img
+                  src={banners[0].imagem}
+                  alt={banners[0].titulo}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </Link>
+            ) : (
               <img
                 src={banners[0].imagem}
                 alt={banners[0].titulo}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover"
               />
-            </Link>
-          ) : (
-            <img
-              src={banners[0].imagem}
-              alt={banners[0].titulo}
-              className="w-full h-full object-cover"
-            />
-          )}
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-end p-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">{banners[0].titulo}</h2>
-              {banners[0].descricao && (
-                <p className="text-white text-sm mt-2">{banners[0].descricao}</p>
-              )}
+            )}
+            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-end p-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">{banners[0].titulo}</h2>
+                {banners[0].descricao && (
+                  <p className="text-white text-sm mt-2">{banners[0].descricao}</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Categorias */}
-      <div id="categorias">
-        <h2 className="text-2xl font-bold mb-6">Categorias</h2>
-        {categorias.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Nenhuma categoria disponível no momento</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categorias.map((categoria) => (
-              <Link
-                key={categoria.id}
-                href={`/categoria/${categoria.slug}`}
-                className="group"
-              >
-                <div
-                  className="h-48 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                  style={{ backgroundColor: categoria.cor + '20', borderLeft: `4px solid ${categoria.cor}` }}
-                >
-                  {categoria.foto && (
-                    <img
-                      src={categoria.foto}
-                      alt={categoria.nome}
-                      className="w-20 h-20 object-contain mb-4 group-hover:scale-110 transition-transform"
-                    />
-                  )}
-                  <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
-                    {categoria.nome}
-                  </h3>
-                </div>
-              </Link>
-            ))}
-          </div>
         )}
+
+        {/* Categorias */}
+        <div id="categorias">
+          <h2 className="text-2xl font-bold mb-6">Categorias</h2>
+          {categorias.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma categoria disponível no momento</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {categorias.map((categoria) => (
+                <Link
+                  key={categoria.id}
+                  href={`/categoria/${categoria.slug}`}
+                  className="group"
+                >
+                  <div
+                    className="h-48 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                    style={{ backgroundColor: categoria.cor + '20', borderLeft: `4px solid ${categoria.cor}` }}
+                  >
+                    {categoria.foto && (
+                      <img
+                        src={categoria.foto}
+                        alt={categoria.nome}
+                        className="w-20 h-20 object-contain mb-4 group-hover:scale-110 transition-transform"
+                      />
+                    )}
+                    <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+                      {categoria.nome}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

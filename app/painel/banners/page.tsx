@@ -25,7 +25,7 @@ export default function BannersPage() {
     try {
       const result = await getBanners()
       if (result.success) {
-        setBanners(result.banners || [])
+        setBanners((result.banners || []) as Banner[])
       }
     } catch (error) {
       console.error('Erro ao carregar banners:', error)

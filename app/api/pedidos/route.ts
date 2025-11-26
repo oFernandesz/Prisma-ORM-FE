@@ -43,17 +43,15 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const email = searchParams.get('email')
-
     const pedidos = await prisma.pedido.findMany({
-      where: email ? { email } : undefined,
       include: {
         produtos: {
           include: { produto: true }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
     return NextResponse.json(pedidos)

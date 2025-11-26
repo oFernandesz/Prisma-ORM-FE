@@ -15,9 +15,11 @@ export async function criarCategoria(formData: FormData) {
   }
 
   try {
+    const slug = validacao.data.nome.toLowerCase().replace(/\s+/g, '-')
     await prisma.categorias.create({
       data: {
         nome: validacao.data.nome,
+        slug: slug,
       },
     })
 
@@ -42,10 +44,12 @@ export async function editarCategoria(id: string, formData: FormData) {
   }
 
   try {
+    const slug = validacao.data.nome.toLowerCase().replace(/\s+/g, '-')
     await prisma.categorias.update({
       where: { id },
       data: {
         nome: validacao.data.nome,
+        slug: slug,
       },
     })
 
