@@ -61,19 +61,22 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-64 w-full rounded-lg" />
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-lg" />
-          ))}
+      <div className="container mx-auto px-4">
+        <div className="space-y-6">
+          <Skeleton className="h-64 w-full rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4">
+      <div className="space-y-8">
       {/* Banner */}
       {banners.length > 0 && (
         <div className="relative h-64 w-full rounded-lg overflow-hidden shadow-lg">
@@ -104,7 +107,7 @@ export default function Home() {
       )}
 
       {/* Categorias */}
-      <div>
+      <div id="categorias">
         <h2 className="text-2xl font-bold mb-6">Categorias</h2>
         {categorias.length === 0 ? (
           <div className="text-center py-12">
