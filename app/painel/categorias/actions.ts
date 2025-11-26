@@ -3,21 +3,21 @@
 import prisma from '@/lib/prisma-client'
 import { revalidatePath } from 'next/cache'
 import { categoriaSchema } from './schemas'
+import { formatarErrosZod } from '@/lib/validation-utils'
 
 export async function criarCategoria(formData: FormData) {
   const nome = formData.get('nome') as string
 
-  // Validar com Zod
   const validacao = categoriaSchema.safeParse({ nome })
 
   if (!validacao.success) {
-    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
+    return { error: formatarErrosZod(validacao.error) }
   }
 
   try {
     await prisma.categorias.create({
       data: {
-        nome: validacao.data.nome.trim(),
+        nome: validacao.data.nome,
       },
     })
 
@@ -35,18 +35,17 @@ export async function criarCategoria(formData: FormData) {
 export async function editarCategoria(id: string, formData: FormData) {
   const nome = formData.get('nome') as string
 
-  // Validar com Zod
   const validacao = categoriaSchema.safeParse({ nome })
 
   if (!validacao.success) {
-    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
+    return { error: formatarErrosZod(validacao.error) }
   }
 
   try {
     await prisma.categorias.update({
       where: { id },
       data: {
-        nome: validacao.data.nome.trim(),
+        nome: validacao.data.nome,
       },
     })
 

@@ -13,9 +13,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Edit } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { editarCategoria } from '../actions'
 import { toast } from 'sonner'
+import { categoriaSchema, type CategoriaInput } from '../schemas'
 
 interface EditCategoriaProps {
   categoria: {
@@ -26,19 +29,31 @@ interface EditCategoriaProps {
 
 export default function EditCategoria({ categoria }: EditCategoriaProps) {
   const [open, setOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<CategoriaInput>({
+    resolver: zodResolver(categoriaSchema),
+    defaultValues: {
+      nome: categoria.nome,
+    },
+  })
 
-  async function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      const result = await editarCategoria(categoria.id, formData)
+  async function onSubmit(data: CategoriaInput) {
+    const formData = new FormData()
+    formData.append('nome', data.nome)
 
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success('Categoria atualizada com sucesso!')
-        setOpen(false)
-      }
-    })
+    const result = await editarCategoria(categoria.id, formData)
+
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success('Categoria atualizada com sucesso!')
+      reset()
+      setOpen(false)
+    }
   }
 
   return (
@@ -55,18 +70,21 @@ export default function EditCategoria({ categoria }: EditCategoriaProps) {
             Altere o nome da categoria.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome da Categoria</Label>
-              <Input
-                id="nome"
-                name="nome"
-                defaultValue={categoria.nome}
-                placeholder="Ex: Pizzas, Bebidas, Sobremesas..."
-                required
-                disabled={isPending}
-              />
+              <div>
+                <Input
+                  id="nome"
+                  placeholder="Ex: Pizzas, Bebidas, Sobremesas..."
+                  disabled={isSubmitting}
+                  {...register('nome')}
+                />
+                {errors.nome && (
+                  <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -74,12 +92,12 @@ export default function EditCategoria({ categoria }: EditCategoriaProps) {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isPending}
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Salvando...' : 'Salvar Alterações'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </DialogFooter>
         </form>

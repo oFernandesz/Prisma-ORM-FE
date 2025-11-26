@@ -2,7 +2,9 @@
 
 import prisma from '@/lib/prisma-client'
 import { revalidatePath } from 'next/cache'
-import { pedidoSchema } from './schemas'
+import { pedidoSchema, pedidoProdutoSchema } from './schemas'
+import { formatarErrosZod } from '@/lib/validation-utils'
+import { z } from 'zod'
 
 export async function criarPedido(
   nome: string,
@@ -11,31 +13,32 @@ export async function criarPedido(
   produtos: Array<{ produtoId: string; quantidade: number }>
 ) {
   try {
-    // Validar dados com Zod
-    const validacao = pedidoSchema.safeParse({
+    const validacaoPedido = pedidoSchema.safeParse({
       nome,
       endereco,
       telefone,
     })
 
-    if (!validacao.success) {
-      return {
-        error: validacao.error.issues[0]?.message || 'Erro na validação dos dados',
-      }
+    if (!validacaoPedido.success) {
+      return { error: formatarErrosZod(validacaoPedido.error) }
     }
 
     if (!produtos || produtos.length === 0) {
       return { error: 'Selecione pelo menos um produto' }
     }
 
-    // Criar pedido com produtos
+    const validacaoProdutos = z.array(pedidoProdutoSchema).safeParse(produtos)
+    if (!validacaoProdutos.success) {
+      return { error: formatarErrosZod(validacaoProdutos.error) }
+    }
+
     const pedido = await prisma.pedido.create({
       data: {
-        nome: validacao.data.nome,
-        endereco: validacao.data.endereco,
-        telefone: validacao.data.telefone,
+        nome: validacaoPedido.data.nome,
+        endereco: validacaoPedido.data.endereco,
+        telefone: validacaoPedido.data.telefone,
         produtos: {
-          create: produtos.map((p) => ({
+          create: validacaoProdutos.data.map((p) => ({
             produtoId: p.produtoId,
             quantidade: p.quantidade,
           })),
@@ -54,7 +57,8 @@ export async function criarPedido(
     return { success: true, pedido }
   } catch (error) {
     console.error('Erro ao criar pedido:', error)
-    return { error: 'Erro ao criar pedido' }
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar pedido'
+    return { error: errorMessage }
   }
 }
 
@@ -66,37 +70,41 @@ export async function editarPedido(
   produtos: Array<{ produtoId: string; quantidade: number }>
 ) {
   try {
-    // Validar dados com Zod
-    const validacao = pedidoSchema.safeParse({
+    if (!id || typeof id !== 'string') {
+      return { error: 'ID do pedido inválido' }
+    }
+
+    const validacaoPedido = pedidoSchema.safeParse({
       nome,
       endereco,
       telefone,
     })
 
-    if (!validacao.success) {
-      return {
-        error: validacao.error.issues[0]?.message || 'Erro na validação dos dados',
-      }
+    if (!validacaoPedido.success) {
+      return { error: formatarErrosZod(validacaoPedido.error) }
     }
 
     if (!produtos || produtos.length === 0) {
       return { error: 'Selecione pelo menos um produto' }
     }
 
-    // Deletar produtos antigos
+    const validacaoProdutos = z.array(pedidoProdutoSchema).safeParse(produtos)
+    if (!validacaoProdutos.success) {
+      return { error: formatarErrosZod(validacaoProdutos.error) }
+    }
+
     await prisma.produtoPedido.deleteMany({
       where: { pedidoId: id },
     })
 
-    // Atualizar pedido e criar novos produtos
     const pedido = await prisma.pedido.update({
       where: { id },
       data: {
-        nome: validacao.data.nome,
-        endereco: validacao.data.endereco,
-        telefone: validacao.data.telefone,
+        nome: validacaoPedido.data.nome,
+        endereco: validacaoPedido.data.endereco,
+        telefone: validacaoPedido.data.telefone,
         produtos: {
-          create: produtos.map((p) => ({
+          create: validacaoProdutos.data.map((p) => ({
             produtoId: p.produtoId,
             quantidade: p.quantidade,
           })),
@@ -115,7 +123,8 @@ export async function editarPedido(
     return { success: true, pedido }
   } catch (error) {
     console.error('Erro ao editar pedido:', error)
-    return { error: 'Erro ao editar pedido' }
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao editar pedido'
+    return { error: errorMessage }
   }
 }
 

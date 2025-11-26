@@ -11,11 +11,13 @@ import {
     FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client"; // seu client
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema, type SignupInput } from "@/lib/auth-schema";
 import { useState } from "react";
 
-// Spinner pequeno
 const Spinner = () => (
     <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -27,55 +29,51 @@ export function SignupForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<SignupInput>({
+        resolver: zodResolver(signupSchema),
+    });
 
-    async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setError("");
-        const formData = new FormData(event.currentTarget);
-        const name = String(formData.get("name") || "");
-        const email = String(formData.get("email") || "");
-        const password = String(formData.get("password") || "");
-        const confirmPassword = String(formData.get("confirm-password") || "");
-
-        if (!name || !email || !password) {
-            return setError("Preencha nome, email e senha.");
-        }
-
-        if (password !== confirmPassword) {
-            return setError("As senhas não coincidem. Por favor, verifique.");
-        }
-
-        setLoading(true);
-
+    async function onSubmit(data: SignupInput) {
         try {
-            const res = await (authClient as any).signUp.email({ 
-                email, 
-                password,
-                name 
+            setError("");
+            const res = await (authClient as any).signUp.email({
+                email: data.email,
+                password: data.password,
+                name: data.name
             });
 
-            // Log para debug (verifique o Network/Console)
-            console.log("signUp response:", res);
+            console.log("SignUp Response:", res);
 
-            // Verifica formatos comuns de erro/resultado
-            if (res?.error) {
-                // Biblioteca pode retornar { error: { message: "..." } }
-                throw new Error(res.error.message || JSON.stringify(res.error));
+            if (!res) {
+                throw new Error("Resposta vazia do servidor");
             }
 
-            // algumas versões retornam { ok: true } ou { user, session } ...
-            // Se houver flag de sucesso, navega
-            setTimeout(() => router.push("/login"), 500);
+            if (res?.error) {
+                const errorMsg = typeof res.error === 'string'
+                    ? res.error
+                    : res.error?.message || JSON.stringify(res.error);
+                throw new Error(errorMsg);
+            }
+
+            if (res?.ok === false || res?.status === 500) {
+                throw new Error(res?.message || "Erro ao criar conta");
+            }
+
+            if (res?.user || res?.data?.user) {
+                setTimeout(() => router.push("/login"), 500);
+            } else {
+                throw new Error("Conta criada mas resposta inválida");
+            }
 
         } catch (err: any) {
             console.error("Erro no signUp:", err);
-            // Mensagem amigável
-            setError(err?.message || "Erro desconhecido ao cadastrar.");
-        } finally {
-            setLoading(false);
+            setError(err?.message || "Erro desconhecido ao cadastrar. Tente novamente.");
         }
     }
 
@@ -83,7 +81,7 @@ export function SignupForm({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card className="overflow-hidden p-0">
                 <CardContent className="grid p-0 md:grid-cols-2">
-                    <form className="p-6 md:p-8" onSubmit={handleSignup}>
+                    <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
                         <FieldGroup>
                             <div className="flex flex-col items-center gap-2 text-center">
                                 <h1 className="text-2xl font-bold">Create your account</h1>
@@ -94,13 +92,31 @@ export function SignupForm({
 
                             <Field>
                                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
-                                <Input id="name" name="name" type="text" placeholder="John Doe" required />
+                                <div>
+                                    <Input
+                                        id="name"
+                                        placeholder="John Doe"
+                                        {...register("name")}
+                                    />
+                                    {errors.name && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                                    )}
+                                </div>
                                 <FieldDescription>Your full name</FieldDescription>
                             </Field>
 
                             <Field>
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+                                <div>
+                                    <Input
+                                        id="email"
+                                        placeholder="m@example.com"
+                                        {...register("email")}
+                                    />
+                                    {errors.email && (
+                                        <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                                    )}
+                                </div>
                                 <FieldDescription>We&apos;ll use this to contact you.</FieldDescription>
                             </Field>
 
@@ -108,11 +124,31 @@ export function SignupForm({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <FieldLabel htmlFor="password">Password</FieldLabel>
-                                        <Input id="password" name="password" type="password" required />
+                                        <div>
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                placeholder="••••••"
+                                                {...register("password")}
+                                            />
+                                            {errors.password && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
-                                        <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
-                                        <Input id="confirm-password" name="confirm-password" type="password" required />
+                                        <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+                                        <div>
+                                            <Input
+                                                id="confirmPassword"
+                                                type="password"
+                                                placeholder="••••••"
+                                                {...register("confirmPassword")}
+                                            />
+                                            {errors.confirmPassword && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <FieldDescription>Must be at least 8 characters long.</FieldDescription>
@@ -125,8 +161,8 @@ export function SignupForm({
                             )}
 
                             <Field>
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? <Spinner /> : "Create Account"}
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? <Spinner /> : "Create Account"}
                                 </Button>
                             </Field>
 

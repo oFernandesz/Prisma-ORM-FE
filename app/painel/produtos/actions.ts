@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma-client'
 import { revalidatePath } from 'next/cache'
 import { produtoSchema } from './schemas'
+import { formatarErrosZod } from '@/lib/validation-utils'
 
 export async function criarProduto(formData: FormData) {
   const nome = formData.get('nome') as string
@@ -10,7 +11,7 @@ export async function criarProduto(formData: FormData) {
   const preco = formData.get('preco') as string
   const categoriaId = formData.get('categoriaId') as string
 
-  // Validar com Zod
+  
   const validacao = produtoSchema.safeParse({
     nome,
     descricao,
@@ -19,24 +20,28 @@ export async function criarProduto(formData: FormData) {
   })
 
   if (!validacao.success) {
-    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
+    console.error('Erro de validação:', validacao.error.issues)
+    return { error: formatarErrosZod(validacao.error) }
   }
 
   try {
-    await prisma.produto.create({
+    console.log('Criando produto:', validacao.data)
+    const produto = await prisma.produto.create({
       data: {
-        nome: validacao.data.nome.trim(),
+        nome: validacao.data.nome,
         descricao: validacao.data.descricao?.trim() || null,
         preco: validacao.data.preco,
         categoriaId: validacao.data.categoriaId,
       },
     })
 
+    console.log('Produto criado com sucesso:', produto)
     revalidatePath('/painel/produtos')
     return { success: true }
   } catch (error) {
     console.error('Erro ao criar produto:', error)
-    return { error: 'Erro ao criar produto' }
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar produto'
+    return { error: errorMessage }
   }
 }
 
@@ -55,14 +60,14 @@ export async function editarProduto(id: string, formData: FormData) {
   })
 
   if (!validacao.success) {
-    return { error: validacao.error.issues[0]?.message || 'Erro na validação dos dados' }
+    return { error: formatarErrosZod(validacao.error) }
   }
 
   try {
     await prisma.produto.update({
       where: { id },
       data: {
-        nome: validacao.data.nome.trim(),
+        nome: validacao.data.nome,
         descricao: validacao.data.descricao?.trim() || null,
         preco: validacao.data.preco,
         categoriaId: validacao.data.categoriaId,
@@ -73,7 +78,8 @@ export async function editarProduto(id: string, formData: FormData) {
     return { success: true }
   } catch (error) {
     console.error('Erro ao editar produto:', error)
-    return { error: 'Erro ao editar produto' }
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao editar produto'
+    return { error: errorMessage }
   }
 }
 

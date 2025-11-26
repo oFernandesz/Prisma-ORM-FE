@@ -13,28 +13,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client"; // 🔑 Importa o mesmo cliente usado no signup
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { authClient } from "@/lib/auth-client";
+import { loginSchema, type LoginInput } from "@/lib/auth-schema";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
-
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") || "");
-    const password = String(formData.get("password") || "");
-
+  async function onSubmit(data: LoginInput) {
     try {
-      // Autentica com BetterAuth
-      const res = await authClient.signIn.email({ email, password });
+      setError("");
+      const res = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      });
 
       console.log("Login response:", res);
 
@@ -42,13 +46,10 @@ export function LoginForm({
         throw new Error(res.error.message || "Credenciais inválidas.");
       }
 
-  // Redireciona para a página principal do painel (/)
-  router.push("/");
+      router.push("/");
     } catch (err: any) {
       console.error("Erro no login:", err);
       setError(err.message || "Erro ao fazer login.");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -56,7 +57,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={handleLogin}>
+          <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
@@ -67,18 +68,31 @@ export function LoginForm({
 
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
+                <div>
+                  <Input
+                    id="email"
+                    placeholder="m@example.com"
+                    {...register("email")}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  )}
+                </div>
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input id="password" name="password" type="password" required />
+                <div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••"
+                    {...register("password")}
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                  )}
+                </div>
               </Field>
 
               {error && (
@@ -88,8 +102,8 @@ export function LoginForm({
               )}
 
               <Field>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Loading..." : "Login"}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Loading..." : "Login"}
                 </Button>
               </Field>
 

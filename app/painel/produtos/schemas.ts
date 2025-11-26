@@ -12,10 +12,14 @@ export const produtoSchema = z.object({
     .optional()
     .or(z.literal('')),
   preco: z
-    .number({ invalid_type_error: 'Preço deve ser um número' })
+    .number()
+    .finite('Preço deve ser um número válido')
     .positive('Preço deve ser maior que zero')
-    .or(z.string().pipe(z.coerce.number().positive('Preço deve ser maior que zero'))),
-  categoriaId: z.string().uuid('Categoria inválida').min(1, 'Selecione uma categoria'),
+    .multipleOf(0.01, 'Preço deve ter no máximo 2 casas decimais'),
+  categoriaId: z
+    .string()
+    .uuid('Categoria inválida')
+    .min(1, 'Selecione uma categoria'),
 })
 
 export type ProdutoInput = z.infer<typeof produtoSchema>

@@ -6,7 +6,12 @@ import { nextCookies } from "better-auth/next-js";
 const prisma = new PrismaClient();
 
 export const auth = betterAuth({
-  adapter: prismaAdapter(prisma, { provider: "sqlite" }),
-  emailAndPassword: { enabled: true },
+  baseURL: "http://localhost:3000",
+  appName: "LastDance",
+  secret: process.env.BETTER_AUTH_SECRET || "your-secret-key",
+  database: prismaAdapter(prisma, { provider: "sqlite" }),
+  emailAndPassword: {
+    enabled: true,
+  },
   plugins: [nextCookies()],
 });
