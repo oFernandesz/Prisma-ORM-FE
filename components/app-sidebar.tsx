@@ -5,7 +5,7 @@ import {
   IconDatabase,
   IconFolder,
   IconListDetails,
-  IconPicture,
+  IconPhoto,
 } from "@tabler/icons-react"
 import {
   Sidebar,
@@ -40,7 +40,7 @@ const data = {
     {
       name: "Banners",
       link: "/painel/banners" as const,
-      icon: IconPicture,
+      icon: IconPhoto,
     },
   ],
 }
@@ -53,10 +53,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/painel">
-                <Pizza className="!size-5" />
+                <Pizza className="size-5!" />
                 <span className="text-base font-semibold">Delivery</span>
               </Link>
             </SidebarMenuButton>
